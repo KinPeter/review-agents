@@ -3,14 +3,15 @@ import { join } from 'path';
 import { AGENTS_FOLDER, CONFIG, REVIEW_FOLDER } from './common.mjs';
 import { claudePrompt } from './claude.mjs';
 import { kiloPrompt } from './kilocode.mjs';
+import { opencodePrompt } from './opencode.mjs';
 
 let agentPrompt = null;
 
 export function setupAgent() {
   if (!CONFIG.agent) {
-    console.log('⚠️ No agent specified in config, defaulting to Claude');
-    agentPrompt = claudePrompt;
-    console.log('🤖 Agent set to: Claude');
+    console.log('⚠️ No agent specified in config, defaulting to KiloCode');
+    agentPrompt = kiloPrompt;
+    console.log('🤖 Agent set to: KiloCode');
     return;
   }
 
@@ -24,17 +25,17 @@ export function setupAgent() {
       console.log('🤖 Agent set to: KiloCode');
       break;
     case 'opencode':
-      console.log('⚠️ OpenCode agent not yet implemented, defaulting to Claude');
-      agentPrompt = claudePrompt;
+      agentPrompt = opencodePrompt;
+      console.log('🤖 Agent set to: OpenCode');
       break;
     case 'copilot':
-      console.log('⚠️ Copilot agent not yet implemented, defaulting to Claude');
-      agentPrompt = claudePrompt;
+      console.log('⚠️ Copilot agent not yet implemented, defaulting to KiloCode');
+      agentPrompt = kiloPrompt;
       break;
     default:
-      console.log(`⚠️ Unknown agent ${CONFIG.agent}, defaulting to Claude`);
-      agentPrompt = claudePrompt;
-      console.log('🤖 Agent set to: Claude');
+      console.log(`⚠️ Unknown agent ${CONFIG.agent}, defaulting to KiloCode`);
+      agentPrompt = kiloPrompt;
+      console.log('🤖 Agent set to: KiloCode');
   }
 }
 
