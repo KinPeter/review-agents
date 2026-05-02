@@ -7,15 +7,22 @@ import { opencodePrompt } from './opencode.mjs';
 
 let agentPrompt = null;
 
-export function setupAgent() {
+export function setupAgent(agent) {
+  if (agent) {
+    setAgentPrompt(agent);
+    return;
+  }
   if (!CONFIG.agent) {
     console.log('⚠️ No agent specified in config, defaulting to KiloCode');
     agentPrompt = kiloPrompt;
     console.log('🤖 Agent set to: KiloCode');
     return;
   }
+  setAgentPrompt(CONFIG.agent);
+}
 
-  switch (CONFIG.agent) {
+function setAgentPrompt(agent) {
+  switch (agent) {
     case 'claude':
       agentPrompt = claudePrompt;
       console.log('🤖 Agent set to: Claude');
@@ -33,7 +40,7 @@ export function setupAgent() {
       agentPrompt = kiloPrompt;
       break;
     default:
-      console.log(`⚠️ Unknown agent ${CONFIG.agent}, defaulting to KiloCode`);
+      console.log(`⚠️ Unknown agent ${agent}, defaulting to KiloCode`);
       agentPrompt = kiloPrompt;
       console.log('🤖 Agent set to: KiloCode');
   }
@@ -61,12 +68,17 @@ export async function runRecommendedAgents(agentNames, ticketFile, commentsFile)
     ...(ticketFile ? ['jira-validator'] : []),
     ...(commentsFile ? ['pr-comments'] : []),
   ];
-  const total = allNames.length;
+
+  return runAgentsByNames(allNames);
+}
+
+export async function runAgentsByNames(agentNames) {
+  const total = agentNames.length;
   let completed = 0;
 
   console.log(`📋 Running ${total} agents in parallel...`);
 
-  const promises = allNames.map(name =>
+  const promises = agentNames.map(name =>
     runAgentByName(name).then(result => {
       completed++;
       console.log(`✅ ${completed}/${total} agents finished (${name})`);

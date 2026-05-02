@@ -10,7 +10,22 @@ export const AGENTS_FOLDER = join(SCRIPTS_FOLDER, '..', '..', 'agents');
 export const CONFIG_FILE = join(USER_HOME, '.pk-review.json');
 export const PROJECT_FOLDER = process.cwd();
 export const REVIEW_BASE_FOLDER = join(USER_HOME, '.pk-review');
-export const VALID_MODES = ['pr', 'branch', 'commit', 'commits', 'staged'];
+export const VALID_MODES = ['pr', 'branch', 'commit', 'commits', 'range', 'staged'];
+export const VALID_AGENTS = ['claude', 'copilot', 'kilocode', 'opencode'];
+export const VALID_TOPICS = [
+  'python',
+  'testing',
+  'security',
+  'react',
+  'styling',
+  'nestjs',
+  'js-ts',
+  'ngrx',
+  'express',
+  'docs',
+  'architecture',
+  'angular',
+];
 
 export let CONFIG = {};
 export let REVIEW_FOLDER = '';
@@ -32,7 +47,39 @@ export function createReviewFolder(mode) {
 }
 
 export function parseArgs(argv) {
-  const [arg, second] = argv.slice(2);
+  const args = argv.slice(2);
+  let agent = undefined;
+  let topics = undefined;
+  const positionalArgs = [];
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+
+    if (arg.startsWith('--agent=')) {
+      const value = arg.slice(8);
+      if (!VALID_AGENTS.includes(value)) {
+        throw new Error(`Invalid agent: ${value}. Valid agents are: ${VALID_AGENTS.join(', ')}`);
+      }
+      agent = value;
+    } else if (arg.startsWith('--topics=')) {
+      const value = arg.slice(9);
+      const topicList = value
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t);
+      const invalidTopics = topicList.filter(t => !VALID_TOPICS.includes(t));
+      if (invalidTopics.length > 0) {
+        throw new Error(
+          `Invalid topic(s): ${invalidTopics.join(', ')}. Valid topics are: ${VALID_TOPICS.join(', ')}`
+        );
+      }
+      topics = topicList;
+    } else {
+      positionalArgs.push(arg);
+    }
+  }
+
+  const [arg, second] = positionalArgs;
   const mode = arg ?? 'branch';
 
   if (!VALID_MODES.includes(mode)) {
@@ -47,13 +94,16 @@ export function parseArgs(argv) {
     throw new Error('Commit mode requires a commit hash as the second argument');
   }
 
-  if (mode === 'commits' && !second) {
+  if ((mode === 'commits' && !second) || (mode === 'range' && !second)) {
     throw new Error(
       'Commits mode requires a commit range as the second argument in format "hash1..hash2"'
     );
   }
 
-  if (mode === 'commits' && !second.includes('..')) {
+  if (
+    (mode === 'commits' && !second.includes('..')) ||
+    (mode === 'range' && !second.includes('..'))
+  ) {
     throw new Error(
       'Commits mode requires a commit range as the second argument in format "hash1..hash2"'
     );
@@ -62,7 +112,7 @@ export function parseArgs(argv) {
   const target = mode === 'branch' ? undefined : second;
   const baseBranch = mode === 'branch' ? second : undefined;
 
-  return { mode, target, baseBranch };
+  return { mode, target, baseBranch, agent, topics };
 }
 
 export function saveContext(context) {

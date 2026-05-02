@@ -1,6 +1,7 @@
 import {
   runClassifierAgent,
   runRecommendedAgents,
+  runAgentsByNames,
   runSummarizerAgent,
   setupAgent,
 } from './modules/agents.mjs';
@@ -26,37 +27,39 @@ import {
   savePrChangedFiles,
   savePrDiff,
 } from './modules/github.mjs';
-import { fetchAndSaveJiraTicket } from './modules/jira.mjs';
+import { fetchAndSaveJiraTicket, parseJiraTicketIdFromBranch } from './modules/jira.mjs';
 
 async function main() {
   loadConfig();
-  setupAgent();
-  const { mode, target, baseBranch } = parseArgs(process.argv);
+  const { mode, target, baseBranch, agent, topics } = parseArgs(process.argv);
+  setupAgent(agent);
+
   console.log(`🚀 Starting review in ${mode} mode${target ? ` for ${target}` : ''}`);
   createReviewFolder(mode);
 
   switch (mode) {
     case 'pr':
-      await processPrReview(target);
+      await processPrReview(topics, target);
       break;
     case 'branch':
-      await processBranchReview(baseBranch);
+      await processBranchReview(topics, baseBranch);
       break;
     case 'staged':
-      await processStagedReview();
+      await processStagedReview(topics);
       break;
+    case 'commits':
     case 'range':
-      await processCommitRangeReview(target);
+      await processCommitRangeReview(topics, target);
       break;
     case 'commit':
-      await processCommitReview(target);
+      await processCommitReview(topics, target);
       break;
     default:
       throw new Error(`Unknown mode: ${mode}`);
   }
 }
 
-async function processPrReview(prNumber) {
+async function processPrReview(topics, prNumber) {
   checkGhCli();
   console.log(`🔍 Reviewing PR #${prNumber}...`);
 
@@ -73,13 +76,17 @@ async function processPrReview(prNumber) {
   const worktreePath = createWorktree(prData.headRefOid);
 
   try {
-    await classifyAndReview(ticketFile, commentsFile);
+    if (topics?.length) {
+      await reviewByTopics(topics);
+    } else {
+      await classifyAndReview(ticketFile, commentsFile);
+    }
   } finally {
     removeWorktree(worktreePath);
   }
 }
 
-async function processBranchReview(baseBranch) {
+async function processBranchReview(topics, baseBranch) {
   const resolvedBase = baseBranch ?? resolveBaseBranch();
   console.log(`🌿 Base branch: ${resolvedBase}`);
 
@@ -91,10 +98,14 @@ async function processBranchReview(baseBranch) {
 
   saveContext({ diffFile, changedFilesFile, ticketFile });
 
-  await classifyAndReview();
+  if (topics?.length) {
+    await reviewByTopics(topics);
+  } else {
+    await classifyAndReview(ticketFile);
+  }
 }
 
-async function processStagedReview() {
+async function processStagedReview(topics) {
   console.log('📦 Reviewing staged changes...');
 
   const diffFile = saveStagedDiff();
@@ -102,10 +113,14 @@ async function processStagedReview() {
 
   saveContext({ diffFile, changedFilesFile, ticketFile: null });
 
-  await classifyAndReview();
+  if (topics?.length) {
+    await reviewByTopics(topics);
+  } else {
+    await classifyAndReview();
+  }
 }
 
-async function processCommitRangeReview(range) {
+async function processCommitRangeReview(topics, range) {
   console.log(`📜 Reviewing commit range: ${range}`);
 
   const diffFile = saveCommitRangeDiff(range);
@@ -113,10 +128,14 @@ async function processCommitRangeReview(range) {
 
   saveContext({ diffFile, changedFilesFile, ticketFile: null });
 
-  await classifyAndReview();
+  if (topics?.length) {
+    await reviewByTopics(topics);
+  } else {
+    await classifyAndReview();
+  }
 }
 
-async function processCommitReview(commitHash) {
+async function processCommitReview(topics, commitHash) {
   console.log(`📜 Reviewing commit: ${commitHash}`);
 
   const diffFile = saveCommitDiff(commitHash);
@@ -124,19 +143,33 @@ async function processCommitReview(commitHash) {
 
   saveContext({ diffFile, changedFilesFile, ticketFile: null });
 
-  await classifyAndReview();
+  if (topics?.length) {
+    await reviewByTopics(topics);
+  } else {
+    await classifyAndReview();
+  }
 }
 
 async function classifyAndReview(ticketFile = null, commentsFile = null) {
   const recommendedAgentNames = await runClassifierAgent();
   const reviews = await runRecommendedAgents(recommendedAgentNames, ticketFile, commentsFile);
+  await summarizeAndComplete(reviews);
+}
 
+async function reviewByTopics(topics) {
+  const reviews = await runAgentsByNames(topics);
+  await summarizeAndComplete(reviews);
+}
+
+async function summarizeAndComplete(reviews) {
   if (reviews.length === 0) {
     console.log('⚠️ No output was produced by the agents!');
     return;
   }
 
-  await runSummarizerAgent();
+  if (reviews.length > 1) {
+    await runSummarizerAgent();
+  }
   console.log('🎉 Review complete! Check the review folder for results.');
 }
 
