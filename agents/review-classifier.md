@@ -29,7 +29,7 @@ You may only recommend agents from this list:
 | Angular framework detected AND `.ts`, `.html` or `.scss` file changed (excluding `*.spec.*`) | `angular` |
 | Any file matches: `*.actions.ts`, `*.effects.ts`, `*.reducer.ts`, `*.selectors.ts` or path contains `store/` | `ngrx` |
 | React library detected AND `.ts`, `.tsx`, `.jsx` file changed (excluding `*.spec.*`) | `react` |
-| Any `.js`, `.jsx`, `.ts`, `.tsx`, `.py` or `*.spec.*` file changed OR files in `tests/` or `e2e/` folder changed | `testing` |
+| Any business logic changed, any `.js`, `.jsx`, `.ts`, `.tsx`, `.py` or `*.spec.*` file changed OR files in `tests/` or `e2e/` folder changed | `testing` |
 | Any `.css`, `.scss`, `.sass` file changed | `styling` |
 | NestJS framework detected AND `.ts` file changed (excluding `*.spec.*`) | `nestjs` |
 | Express framework detected AND `.js`, `.ts` file changed (excluding `*.spec.*`) | `express` |
