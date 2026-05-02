@@ -1,10 +1,45 @@
+import { spawn } from 'child_process';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { AGENTS_FOLDER, CONFIG, REVIEW_FOLDER } from './common.mjs';
-import { claudePrompt } from './claude.mjs';
-import { kiloPrompt } from './kilocode.mjs';
-import { opencodePrompt } from './opencode.mjs';
-import { copilotPrompt } from './copilot.mjs';
+import { AGENTS_FOLDER, CONFIG, REVIEW_FOLDER, PROJECT_FOLDER, WORKTREE_FOLDER } from './common.mjs';
+
+const AGENT_CONFIGS = [
+  { id: 'claude', cli: 'claude', args: ['--print', '--dangerously-skip-permissions'], logName: 'Claude' },
+  { id: 'kilocode', cli: 'kilo', args: ['run', '--auto'], logName: 'KiloCode' },
+  { id: 'opencode', cli: 'opencode', args: ['run', '--dangerously-skip-permissions'], logName: 'OpenCode' },
+  { id: 'copilot', cli: 'copilot', args: ['--yolo', '--no-ask-user', '-s'], logName: 'Copilot' },
+];
+
+function createAgentPrompt(config) {
+  return (prompt) => new Promise((resolve, reject) => {
+    const proc = spawn(config.cli, config.args, {
+      cwd: WORKTREE_FOLDER ?? PROJECT_FOLDER,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+
+    proc.stdin.write(prompt);
+    proc.stdin.end();
+
+    let stdout = '';
+    let stderr = '';
+
+    proc.stdout.on('data', chunk => {
+      stdout += chunk.toString();
+    });
+
+    proc.stderr.on('data', chunk => {
+      stderr += chunk.toString();
+    });
+
+    proc.on('close', code => {
+      if (code === 0) {
+        resolve(stdout);
+      } else {
+        reject(new Error(`${config.logName} exited with code ${code}: ${stderr.trim()}`));
+      }
+    });
+  });
+}
 
 let agentPrompt = null;
 
@@ -14,8 +49,9 @@ export function setupAgent(agent) {
     return;
   }
   if (!CONFIG.agent) {
+    const defaultConfig = AGENT_CONFIGS.find(c => c.id === 'kilocode');
+    agentPrompt = createAgentPrompt(defaultConfig);
     console.log('⚠️ No agent specified in config, defaulting to KiloCode');
-    agentPrompt = kiloPrompt;
     console.log('🤖 Agent set to: KiloCode');
     return;
   }
@@ -23,28 +59,18 @@ export function setupAgent(agent) {
 }
 
 function setAgentPrompt(agent) {
-  switch (agent) {
-    case 'claude':
-      agentPrompt = claudePrompt;
-      console.log('🤖 Agent set to: Claude');
-      break;
-    case 'kilocode':
-      agentPrompt = kiloPrompt;
-      console.log('🤖 Agent set to: KiloCode');
-      break;
-    case 'opencode':
-      agentPrompt = opencodePrompt;
-      console.log('🤖 Agent set to: OpenCode');
-      break;
-    case 'copilot':
-      console.log('🤖 Agent set to: Copilot');
-      agentPrompt = copilotPrompt;
-      break;
-    default:
-      console.log(`⚠️ Unknown agent ${agent}, defaulting to KiloCode`);
-      agentPrompt = kiloPrompt;
-      console.log('🤖 Agent set to: KiloCode');
+  const agentConfig = AGENT_CONFIGS.find(c => c.id === agent);
+
+  if (agentConfig) {
+    agentPrompt = createAgentPrompt(agentConfig);
+    console.log(`🤖 Agent set to: ${agentConfig.logName}`);
+    return;
   }
+
+  console.log(`⚠️ Unknown agent ${agent}, defaulting to KiloCode`);
+  const defaultConfig = AGENT_CONFIGS.find(c => c.id === 'kilocode');
+  agentPrompt = createAgentPrompt(defaultConfig);
+  console.log(`🤖 Agent set to: ${defaultConfig.logName}`);
 }
 
 export async function runClassifierAgent() {
