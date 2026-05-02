@@ -4,6 +4,7 @@ import { AGENTS_FOLDER, CONFIG, REVIEW_FOLDER } from './common.mjs';
 import { claudePrompt } from './claude.mjs';
 import { kiloPrompt } from './kilocode.mjs';
 import { opencodePrompt } from './opencode.mjs';
+import { copilotPrompt } from './copilot.mjs';
 
 let agentPrompt = null;
 
@@ -36,8 +37,8 @@ function setAgentPrompt(agent) {
       console.log('🤖 Agent set to: OpenCode');
       break;
     case 'copilot':
-      console.log('⚠️ Copilot agent not yet implemented, defaulting to KiloCode');
-      agentPrompt = kiloPrompt;
+      console.log('🤖 Agent set to: Copilot');
+      agentPrompt = copilotPrompt;
       break;
     default:
       console.log(`⚠️ Unknown agent ${agent}, defaulting to KiloCode`);
