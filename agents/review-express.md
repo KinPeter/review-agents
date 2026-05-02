@@ -181,7 +181,6 @@ Below are common anti-patterns in Express/Node.js applications, categorized by p
 Structure your review report EXACTLY like this:
 
 <output>
-```markdown
 ## Express Review
 
 ### Critical Issues (Must Fix)
@@ -202,7 +201,6 @@ Structure your review report EXACTLY like this:
 
 ### Positive Observations
 - [ ] [Things done well, acknowledge good patterns]
-```
 </output>
 
 ## Important notes

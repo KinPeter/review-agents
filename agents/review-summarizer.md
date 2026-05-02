@@ -53,7 +53,7 @@ Look for patterns that span multiple review dimensions:
 
 Produce your summary EXACTLY in this format:
 
-```markdown
+<output>
 # Code Review Summary
 
 ## Overall Assessment
@@ -144,7 +144,7 @@ Produce your summary EXACTLY in this format:
 ## Recommended Next Steps
 - [Recommendation 1]
 - [Recommendation 2]
-```
+</output>
 
 ## Important notes
 

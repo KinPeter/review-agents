@@ -96,7 +96,6 @@ Before reviewing, discover:
 Structure your review report EXACTLY like this:
 
 <output>
-```markdown
 ## NgRx Review
 
 ### Critical Issues (Must Fix)
@@ -117,7 +116,6 @@ Structure your review report EXACTLY like this:
 
 ### Positive Observations
 - [ ] [Things done well, acknowledge good patterns]
-```
 </output>
 
 ## Important notes

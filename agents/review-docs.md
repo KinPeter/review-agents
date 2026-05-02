@@ -123,7 +123,6 @@ Use this checklist to guide your review. Categories or items marked with **(crit
 Structure your review report EXACTLY like this:
 
 <output>
-```markdown
 ## Documentation Review
 
 ### Critical Issues (Must Fix)
@@ -144,7 +143,6 @@ Structure your review report EXACTLY like this:
 
 ### Positive Observations
 - [ ] [Things done well, acknowledge good patterns]
-```
 </output>
 
 ## Important notes

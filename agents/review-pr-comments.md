@@ -67,7 +67,7 @@ Use the diff from `diffFile` (found in `{{REVIEW_FOLDER/context.json}}`) to cros
 
 Structure your report EXACTLY like this:
 
-```markdown
+<output>
 ## PR Comment Triage: PR #[number]
 
 ### Summary
@@ -90,7 +90,7 @@ Structure your report EXACTLY like this:
 - [ ] **Comment**: <comment body>
   - **Location**: <file path>:<line number>
   - **Reason**: <explanation>
-```
+</output>
 
 ## Important notes
 

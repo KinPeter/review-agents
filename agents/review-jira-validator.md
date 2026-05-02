@@ -63,7 +63,7 @@ Check these common DoD items:
 
 Structure your report exactly like this:
 
-```markdown
+<output>
 # Jira Validation [TICKET KEY]
 
 ## Ticket Summary
@@ -104,7 +104,7 @@ Structure your report exactly like this:
 [APPROVED / NEEDS WORK / MAJOR GAPS]
 
 [Brief explanation of what needs to happen before this can be considered as complete per the ticket]
-```
+</output>
 
 ## Strictness policy
 

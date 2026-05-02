@@ -124,7 +124,6 @@ Use this information to guide your review and ensure you're following the projec
 Structure your review report EXACTLY like this:
 
 <output>
-```markdown
 ## Security Review
 
 ### Critical Issues (Must Fix)
@@ -145,7 +144,6 @@ Structure your review report EXACTLY like this:
 
 ### Positive Observations
 - [ ] [Things done well, acknowledge good patterns]
-```
 </output>
 
 ## Important notes
