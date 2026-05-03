@@ -137,3 +137,10 @@ For example: `1714678321_branch_myapp`
 - `output-{agent}.md` - Output from each review subagent
 - `review-summary.md` - Aggregated summary from all agents
 - temporary context files required for the review process
+
+## TODOs, future plans
+
+- [ ] Support Bitbucket for PR reviews
+- [ ] Support GitLab for PR reviews
+- [ ] Support Codex CLI AI agent
+- [ ] Support for more AI agents (Gemini, Mistral, etc.)
