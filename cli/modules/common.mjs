@@ -48,14 +48,17 @@ export function createReviewFolder(mode) {
 
 export function parseArgs(argv) {
   const args = argv.slice(2);
+  const positionalArgs = [];
   let agent = undefined;
   let topics = undefined;
-  const positionalArgs = [];
+  let showHelp = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
 
-    if (arg.startsWith('--agent=')) {
+    if (arg === '--help' || arg === 'help') {
+      showHelp = true;
+    } else if (arg.startsWith('--agent=')) {
       const value = arg.slice(8);
       if (!VALID_AGENTS.includes(value)) {
         throw new Error(`Invalid agent: ${value}. Valid agents are: ${VALID_AGENTS.join(', ')}`);
@@ -81,6 +84,17 @@ export function parseArgs(argv) {
 
   const [arg, second] = positionalArgs;
   const mode = arg ?? 'branch';
+
+  if (showHelp) {
+    return {
+      mode,
+      target: undefined,
+      baseBranch: undefined,
+      agent: undefined,
+      topics: undefined,
+      showHelp: true,
+    };
+  }
 
   if (!VALID_MODES.includes(mode)) {
     throw new Error(`Invalid mode: ${mode}. Valid modes are: ${VALID_MODES.join(', ')}`);
@@ -112,7 +126,7 @@ export function parseArgs(argv) {
   const target = mode === 'branch' ? undefined : second;
   const baseBranch = mode === 'branch' ? second : undefined;
 
-  return { mode, target, baseBranch, agent, topics };
+  return { mode, target, baseBranch, agent, topics, showHelp };
 }
 
 export function saveContext(context) {

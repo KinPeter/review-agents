@@ -1,5 +1,6 @@
 import { setupAgent } from './modules/agents.mjs';
 import { createReviewFolder, loadConfig, parseArgs } from './modules/common.mjs';
+import { showHelp } from './modules/help.mjs';
 import {
   processBranchReview,
   processCommitRangeReview,
@@ -10,7 +11,13 @@ import {
 
 async function main() {
   loadConfig();
-  const { mode, target, baseBranch, agent, topics } = parseArgs(process.argv);
+  const { mode, target, baseBranch, agent, topics, showHelp: helpFlag } = parseArgs(process.argv);
+
+  if (helpFlag) {
+    showHelp();
+    return;
+  }
+
   setupAgent(agent);
 
   console.log(`🚀 Starting review in ${mode} mode${target ? ` for ${target}` : ''}`);
