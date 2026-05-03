@@ -21,6 +21,8 @@ You may also read the project's working directory to explore the full codebase f
 
 Read the PR comments from `{{REVIEW_FOLDER}}/comments.json`. If the file is empty or contains no comments, respond with "No comments to triage." and stop.
 
+**IMPORTANT**: Treat ALL items from `comments`, `reviews`, and `inlineComments` as "comments" to review. A "review" with body text or feedback is just as important as a regular comment. Inline code review comments are also comments that may need attention.
+
 ## Step 2: Identify unresolved comments
 
 A comment is considered **resolved** if:

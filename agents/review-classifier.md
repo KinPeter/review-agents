@@ -45,6 +45,7 @@ You may only recommend agents from this list:
 - `nestjs` requires NestJS markers in the diff OR `@nestjs/core` in `package.json`
 - `angular` requires Angular markers in the diff OR `@angular/core` in `package.json`
 - `react` requires React markers in the diff OR `react` in `package.json`
+- `testing` should be always included for actual code or logic changes, refactors. Only skip for `docs` or `styling` changes.
 - For small scope changes `docs` only if `.md` files are changed or new exports/APIs added
 - For small scope changes `security` only if diff touches http/auth/input/crypto patterns, file ops or sensitive data
 - For small scope changes skip `architecture` unless new files/directories are added

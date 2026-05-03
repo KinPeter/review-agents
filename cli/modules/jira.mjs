@@ -9,25 +9,6 @@ export function parseJiraTicketIdFromBranch() {
   return match ? match[1] : null;
 }
 
-export async function fetchJiraTicket(ticketId) {
-  const { jiraBaseUrl, jiraEmail, jiraApiToken } = getJiraConfig();
-  const credentials = Buffer.from(`${jiraEmail}:${jiraApiToken}`).toString('base64');
-  const url = `${jiraBaseUrl}/rest/api/3/issue/${ticketId}`;
-
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch Jira ticket: ${response.statusText}`);
-  }
-
-  return response.json();
-}
-
 export async function fetchAndSaveJiraTicket(ticketId) {
   if (!ticketId) {
     console.log('⚠️ No Jira ticket ID found in branch name');
@@ -44,6 +25,25 @@ export async function fetchAndSaveJiraTicket(ticketId) {
     console.warn(`⚠️ Failed to fetch Jira ticket ${ticketId}: ${err.message}`);
     return null;
   }
+}
+
+async function fetchJiraTicket(ticketId) {
+  const { jiraBaseUrl, jiraEmail, jiraApiToken } = getJiraConfig();
+  const credentials = Buffer.from(`${jiraEmail}:${jiraApiToken}`).toString('base64');
+  const url = `${jiraBaseUrl}/rest/api/3/issue/${ticketId}`;
+
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Basic ${credentials}`,
+      Accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Jira ticket: ${response.statusText}`);
+  }
+
+  return response.json();
 }
 
 function getJiraConfig() {
