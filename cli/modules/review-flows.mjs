@@ -3,6 +3,7 @@ import {
   runRecommendedAgents,
   runAgentsByNames,
   runSummarizerAgent,
+  runReconcilerAgent,
 } from './agents.mjs';
 import { saveContext } from './common.mjs';
 import {
@@ -124,7 +125,7 @@ export async function processCommitReview(topics, commitHash) {
 async function classifyAndReview(ticketFile = null, commentsFile = null) {
   const recommendedAgentNames = await runClassifierAgent();
   const reviews = await runRecommendedAgents(recommendedAgentNames, ticketFile, commentsFile);
-  await summarizeAndComplete(reviews);
+  await summarizeAndComplete(reviews, commentsFile);
 }
 
 async function reviewByTopics(topics) {
@@ -132,7 +133,7 @@ async function reviewByTopics(topics) {
   await summarizeAndComplete(reviews);
 }
 
-async function summarizeAndComplete(reviews) {
+async function summarizeAndComplete(reviews, commentsFile = null) {
   if (reviews.length === 0) {
     console.log('⚠️ No output was produced by the agents!');
     return;
@@ -141,5 +142,10 @@ async function summarizeAndComplete(reviews) {
   if (reviews.length > 1) {
     await runSummarizerAgent();
   }
+
+  if (commentsFile) {
+    await runReconcilerAgent();
+  }
+
   console.log('🎉 Review complete! Check the review folder for results.');
 }

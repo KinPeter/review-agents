@@ -46,11 +46,26 @@ The CLI uses a classifier to automatically determine which specialized review ag
 | `security`     | Security vulnerabilities, secrets and OWASP top 10 risks     |
 | `architecture` | Overall architecture, layering and design patterns           |
 
-Additional agents:
+### Pipeline Agents
 
-- `jira-validator` - Validates PR changes against Jira ticket acceptance criteria
-- `pr-comments` - Reviews and categorizes existing PR comments
-- `summarizer` - Aggregates all agent outputs into a unified review summary
+These agents run automatically as part of the review pipeline — they aren't triggered by the classifier but orchestrate the overall review flow:
+
+| Agent            | Role                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `classifier`     | Analyzes the diff and determines which review agents to run                             |
+| `jira-validator` | Validates PR changes against Jira ticket acceptance criteria                            |
+| `pr-comments`    | Reviews and categorizes existing PR comments                                            |
+| `summarizer`     | Aggregates all agent outputs into a unified review summary                              |
+| `reconciler`     | Cross-references the review summary against PR comments to produce a reconciled summary |
+
+## Review Pipeline
+
+The review process follows a multi-stage pipeline:
+
+1. **Classification** — The classifier analyzes the diff and changed files to determine which specialized review agents are needed.
+2. **Review** — The recommended agents run in parallel, each producing an `output-{agent}.md` file.
+3. **Summarization** — The summarizer aggregates all individual agent outputs into a single `review-summary.md`.
+4. **Reconciliation** _(PR reviews only)_ — If the review has associated PR comments (from human reviewers or bot reviewers), the reconciler cross-references the summary against the comments. It removes findings that have been resolved, emphasizes critical issues raised by other reviewers, demotes minor preferences, and produces a reconciled `review-reconciliation.md`.
 
 ## Installation
 
@@ -136,6 +151,7 @@ For example: `1714678321_branch_myapp`
 
 - `output-{agent}.md` - Output from each review subagent
 - `review-summary.md` - Aggregated summary from all agents
+- `review-reconciliation.md` - Reconciled summary after cross-referencing with PR comments (PR reviews only)
 - temporary context files required for the review process
 
 ## TODOs, future plans

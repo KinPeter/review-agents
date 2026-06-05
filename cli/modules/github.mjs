@@ -69,9 +69,18 @@ export function fetchAndSavePrComments(prNumber) {
     return null;
   }
 
+  const data = reduceCommentsFileSlop({ comments, reviews, inlineComments });
+
+  if (data.comments.length === 0 && data.reviews.length === 0 && data.inlineComments.length === 0) {
+    console.log('✅ No relevant comments found on PR');
+    return null;
+  }
+
   const filePath = join(REVIEW_FOLDER, 'comments.json');
-  writeFileSync(filePath, JSON.stringify({ comments, reviews, inlineComments }, null, 2));
-  console.log(`💬 Saved PR comments (${totalCount} comments)`);
+  writeFileSync(filePath, JSON.stringify(data, null, 2));
+  console.log(
+    `💬 Saved PR comments (${data.comments.length} conversation, ${data.reviews.length} reviews, ${data.inlineComments.length} inline)`
+  );
   return filePath;
 }
 
@@ -81,4 +90,43 @@ export function parseJiraTicketIdFromPr(prTitle, headRefName) {
     if (match) return match[1];
   }
   return null;
+}
+
+function reduceCommentsFileSlop({ comments, reviews, inlineComments }) {
+  const isAutomated = body => body?.startsWith('<!--');
+
+  const isRelevant = c => !isAutomated(c.body); // Add more checks for project-specific automation
+
+  const filteredComments = comments?.filter(isRelevant).map(c => ({
+    id: c.id,
+    author: c.author.login,
+    body: c.body,
+  }));
+
+  const filteredReviews = reviews?.filter(isRelevant).map(r => ({
+    id: r.id,
+    author: r.author.login,
+    body: r.body,
+    state: r.state,
+  }));
+
+  const filteredInlineComments = inlineComments?.filter(isRelevant).map(c => ({
+    id: c.id,
+    user: c.user.login,
+    body: c.body,
+    path: c.path,
+    diff_hunk: c.diff_hunk,
+    start_line: c.start_line,
+    line: c.line,
+    original_line: c.original_line,
+    position: c.position,
+    original_position: c.original_position,
+    in_reply_to_id: c.in_reply_to_id,
+  }));
+
+  return {
+    comments: filteredComments,
+    reviews: filteredReviews,
+    inlineComments: filteredInlineComments,
+  };
 }

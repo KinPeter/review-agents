@@ -1,44 +1,61 @@
 import { spawn } from 'child_process';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import { AGENTS_FOLDER, CONFIG, REVIEW_FOLDER, PROJECT_FOLDER, WORKTREE_FOLDER } from './common.mjs';
+import {
+  AGENTS_FOLDER,
+  CONFIG,
+  REVIEW_FOLDER,
+  PROJECT_FOLDER,
+  WORKTREE_FOLDER,
+} from './common.mjs';
 
 const AGENT_CONFIGS = [
-  { id: 'claude', cli: 'claude', args: ['--print', '--dangerously-skip-permissions'], logName: 'Claude' },
+  {
+    id: 'claude',
+    cli: 'claude',
+    args: ['--print', '--dangerously-skip-permissions'],
+    logName: 'Claude',
+  },
   { id: 'kilocode', cli: 'kilo', args: ['run', '--auto'], logName: 'KiloCode' },
-  { id: 'opencode', cli: 'opencode', args: ['run', '--dangerously-skip-permissions'], logName: 'OpenCode' },
+  {
+    id: 'opencode',
+    cli: 'opencode',
+    args: ['run', '--dangerously-skip-permissions'],
+    logName: 'OpenCode',
+  },
   { id: 'copilot', cli: 'copilot', args: ['--yolo', '--no-ask-user', '-s'], logName: 'Copilot' },
 ];
 
 function createAgentPrompt(config) {
-  return (prompt) => new Promise((resolve, reject) => {
-    const proc = spawn(config.cli, config.args, {
-      cwd: WORKTREE_FOLDER ?? PROJECT_FOLDER,
-      stdio: ['pipe', 'pipe', 'pipe'],
+  return prompt =>
+    new Promise((resolve, reject) => {
+      const proc = spawn(config.cli, config.args, {
+        cwd: WORKTREE_FOLDER ?? PROJECT_FOLDER,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+
+      proc.stdin.write(prompt);
+      proc.stdin.end();
+
+      let stdout = '';
+      let stderr = '';
+
+      proc.stdout.on('data', chunk => {
+        stdout += chunk.toString();
+      });
+
+      proc.stderr.on('data', chunk => {
+        stderr += chunk.toString();
+      });
+
+      proc.on('close', code => {
+        if (code === 0) {
+          resolve(stdout);
+        } else {
+          reject(new Error(`${config.logName} exited with code ${code}: ${stderr.trim()}`));
+        }
+      });
     });
-
-    proc.stdin.write(prompt);
-    proc.stdin.end();
-
-    let stdout = '';
-    let stderr = '';
-
-    proc.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    proc.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-    });
-
-    proc.on('close', code => {
-      if (code === 0) {
-        resolve(stdout);
-      } else {
-        reject(new Error(`${config.logName} exited with code ${code}: ${stderr.trim()}`));
-      }
-    });
-  });
 }
 
 let agentPrompt = null;
@@ -144,5 +161,17 @@ export async function runSummarizerAgent() {
   const outputPath = join(REVIEW_FOLDER, 'review-summary.md');
   writeFileSync(outputPath, output);
   console.log(`📝 Saved summary to ${outputPath}`);
+  return outputPath;
+}
+
+export async function runReconcilerAgent() {
+  const template = readFileSync(join(AGENTS_FOLDER, 'review-reconciler.md'), 'utf8');
+  const prompt = template.replaceAll('{{REVIEW_FOLDER}}', REVIEW_FOLDER);
+  console.log('🤖 Running reconciler agent to take PR comments into account...');
+  const output = await agentPrompt(prompt);
+
+  const outputPath = join(REVIEW_FOLDER, 'review-reconciliation.md');
+  writeFileSync(outputPath, output);
+  console.log(`📝 Saved reconciliation to ${outputPath}`);
   return outputPath;
 }

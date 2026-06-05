@@ -158,3 +158,4 @@ Produce your summary EXACTLY in this format:
     - **READY TO MERGE**: Zero critical issues, zero or few hight priority concerns
     - **NEEDS WORK**: Any critical issues, or 3-5 high priority concerns
     - **MAJOR ISSUES**: Multiple critical issues or fundamental architectural concerns
+- **Respond with the whole summary output**: Do NOT write any files, that is not your job. The orchestrator will generate the file from your output.
